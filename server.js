@@ -1,30 +1,49 @@
 const express = require('express');
+const handlebars = require('express-handlebars');
+const bodyParser = require('body-parser');
 
 const checkCatIdMiddleware = require('./middlewares/middleware');
+const logger = require('./middlewares/loggerMiddleware');
+const cats = require('./cats');
 
 const app = express();
 
-const cats = [];
 
-// app.get('/', (req, res) => {
-//     res.send('Hello world from express!');
-// });
+app.use('/static', express.static('public'));
+app.use(logger);
+
+app.use(bodyParser.urlencoded({extended: false}))
+
+app.engine('hbs', handlebars({
+    extname: 'hbs',
+}));
+app.set('view engine', 'hbs');
+
+app.get('/', (req, res) => {
+    let name = 'Navcho';
+
+    res.render('home', { name });
+});
 
 app.get('/download', (req, res) => {
-    // res.attachment('./views/home.html');
-    // res.end();
+    res.download('./public/index.html');
+    // res.sendFile('./public/index.html', { root: __dirname });
+});
 
-    res.sendFile('./views/some.pdf', { root: __dirname });
+app.get('/cats', (req, res) => {
+    res.render('cats', {cats: cats.getAll()});
 });
 
 app.post('/cats', (req, res) => {
-    console.log('create cat');
+    let catName = req.body.cat;
+    
+    cats.add(catName)
 
-    res.status(201).send('cat created!');
+    res.redirect('/cats');
 });
 
 
-app.get('/cats/:catId?', checkCatIdMiddleware, (req, res) => {
+app.get('/cats/:catId?', (req, res) => {
     if (!/\d+/.test(req.params.catId)) {
         res.status(404).send('You need to specify cat id number');
 
