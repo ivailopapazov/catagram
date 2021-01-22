@@ -8,7 +8,6 @@ const cats = require('./cats');
 
 const app = express();
 
-
 app.use('/static', express.static('public'));
 app.use(logger);
 
